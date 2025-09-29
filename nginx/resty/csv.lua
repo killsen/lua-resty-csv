@@ -10,7 +10,7 @@ local _concat       = table.concat
 local _clear        = table.clear
 local _newt         = table.new
 
-local _M = { _VERSION = '0.1.0' }
+local _M = { _VERSION = '1.0.0' }
 local mt = { __index = _M }
 
 _M.types = {
