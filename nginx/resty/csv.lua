@@ -1,4 +1,5 @@
 
+local type          = type
 local tostring      = tostring
 local setmetatable  = setmetatable
 local ipairs        = ipairs
@@ -10,7 +11,7 @@ local _concat       = table.concat
 local _clear        = table.clear
 local _newt         = table.new
 
-local _M = { _VERSION = '1.0.0' }
+local _M = { _VERSION = '1.0.1' }
 local mt = { __index = _M }
 
 _M.types = {
@@ -47,6 +48,9 @@ local function merge_options(options)
         end
     end
 
+    -- 预生成需要检查的特殊字符模式
+    opts["escape_pattern"] = '[' .. opts.delimiter .. opts.quote_char .. '\n\r]'
+
     return opts
 
 end
@@ -59,24 +63,25 @@ function _M.new(options)  --@@
 end
 
 -- 转义字段（生成 CSV 时使用）
-local function escape_field(field, opts)
--- @field   : string | number | boolean | nil
+local function escape_field(str, opts)
+-- @str     : string | number | boolean | nil
 -- @opts    : @Options
 -- @return  : string
 
-    local str = field ~= nil and tostring(field) or ""
+    if str == nil then return "" end
+    if type(str) ~= "string" then return tostring(str) end
+
+    -- 检查是否包含需要转义的字符
+    local escape_pattern = opts["escape_pattern"]
+    if not str:find(escape_pattern) then return str end
+
     local quote_char = opts.quote_char
-    local delimiter  = opts.delimiter
 
-    -- 检查是否需要用引号包裹（包含分隔符、引号、换行）
-    if str:find('[' .. delimiter .. quote_char .. '\n\r]') then
-        -- 转义引号（将单个引号替换为两个）
-        str = str:gsub(quote_char, quote_char .. quote_char)
-        -- 用引号包裹字段
-        return quote_char .. str .. quote_char
-    end
+    -- 转义引号（将单个引号替换为两个）
+    str = str:gsub(quote_char, quote_char .. quote_char)
 
-    return str
+    -- 用引号包裹字段
+    return quote_char .. str .. quote_char
 
 end
 
